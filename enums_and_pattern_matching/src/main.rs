@@ -1,5 +1,3 @@
-use std::num::FpCategory::Normal;
-
 #[derive(Debug)]
 enum Message {
     _Quit,
@@ -16,7 +14,7 @@ impl Message {
 
 #[derive(Debug)] // so we can inspect the state in a minute
 enum UsState {
-    Alabama,
+    _Alabama,
     Alaska,
     // --snip--
 }
@@ -24,7 +22,7 @@ enum UsState {
 impl UsState {
     fn existed_in(&self, year: u16) -> bool {
         match self {
-            UsState::Alabama => year >= 1819,
+            UsState::_Alabama => year >= 1819,
             UsState::Alaska => year >= 1959,
         }
     }
