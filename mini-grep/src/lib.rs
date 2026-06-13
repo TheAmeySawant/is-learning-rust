@@ -1,5 +1,7 @@
 use std::{fs, process};
 
+use crate::CaseSensitivity::{InSensitive, Sensitive};
+
 #[derive(Debug)]
 enum CaseSensitivity {
     Sensitive,
@@ -14,23 +16,39 @@ pub struct Config {
 }
 
 impl Config {
-    //My version 1 of build which uses if-else ladder
-    pub fn build_v1(input_args: &[String]) -> Result<Self, &'static str> {
-        if input_args.len() == 3 {
-            Ok(Config {
-                file_path: input_args[2].clone(),
-                query: input_args[1].clone(),
-                sensitivity: CaseSensitivity::InSensitive,
-            })
-        } else if input_args.len() == 4 && input_args[3] == "-s" {
-            Ok(Config {
-                file_path: input_args[2].clone(),
-                query: input_args[1].clone(),
-                sensitivity: CaseSensitivity::Sensitive,
-            })
-        } else {
-            Err(
-                "\n\n\n-------------------------------------------------------------------
+    //My version 1 of build was using if-else ladder
+    //But now we just take ownership of args iterator and avoiding heap heavy tasks like creating Vec<String>, cloning the String reference
+    //This small change makes the V1 much more memory and performance efficient than V2.
+    //Actually i should call this V3, right, but i am lazy :D
+
+    pub fn build_v1(mut input_args: impl Iterator<Item = String>) -> Result<Self, &'static str> {
+        input_args.next();
+
+        if let Some(query) = input_args.next() {
+            if let Some(file_path) = input_args.next() {
+                match input_args.next() {
+                    Some(s) => {
+                        if input_args.next().is_none() && s == "-s" {
+                            return Ok(Config {
+                                file_path,
+                                query,
+                                sensitivity: Sensitive,
+                            });
+                        }
+                    }
+                    None => {
+                        return Ok(Config {
+                            file_path,
+                            query,
+                            sensitivity: InSensitive,
+                        });
+                    }
+                }
+            }
+        }
+
+        Err(
+            "\n\n\n-------------------------------------------------------------------
 Error: Invalid Command!
 
 Follow these Command Format for, 
@@ -38,8 +56,7 @@ Follow these Command Format for,
 Case In-Sensitive Search (By Default): cargo run -- query file_path
 Case Sensitive Search : cargo run -- query file_path -s
 -------------------------------------------------------------------\n\n\n",
-            )
-        }
+        )
     }
 
     //Then i found out how to use match on slice of Strings, would be idiomatic, that's how i got v2
@@ -80,23 +97,21 @@ Case Sensitive Search : cargo run -- query file_path -s
         let search_result;
 
         match self.sensitivity {
-            CaseSensitivity::InSensitive => search_result = self.search_case_insensitive(&contents),
-            CaseSensitivity::Sensitive => search_result = self.search_case_sensitive(&contents)
+            CaseSensitivity::InSensitive => {
+                search_result = self.search_case_insensitive_using_iterator(&contents)
+            }
+            CaseSensitivity::Sensitive => search_result = self.search_case_sensitive_using_iterator(&contents),
         }
-
 
         println!(
             "\nResult of Case {:?} Search:\n\nLines of {} file, containing '{}' :\n{:?}\n",
-            self.sensitivity,
-            self.file_path,
-            self.query,
-            search_result
+            self.sensitivity, self.file_path, self.query, search_result
         );
     }
 
     pub fn search_case_insensitive<'a>(&self, contents: &'a String) -> Vec<&'a str> {
         let mut search_result = Vec::<&str>::new();
-        let query_small: &str = &self.query.to_lowercase();
+        let query_small: String = self.query.to_lowercase();
 
         let contents_small = contents.to_lowercase();
         let contents_small = contents_small.lines().enumerate();
@@ -104,12 +119,35 @@ Case Sensitive Search : cargo run -- query file_path -s
         let contents: Vec<&str> = contents.lines().collect();
 
         for (idx, line) in contents_small {
-            if line.contains(query_small) {
+            if line.contains(&query_small) {
                 search_result.push(contents[idx]);
             }
         }
 
         search_result
+    }
+
+
+    //performance wise both are same, but this is compact & idiomatic.
+    pub fn search_case_insensitive_using_iterator<'a>(&self, contents: &'a String) -> Vec<&'a str> {
+        let query_small: String = self.query.to_lowercase();
+
+        let contents_small = contents.to_lowercase();
+
+        let contents: Vec<&str> = contents.lines().collect();
+
+        //1. break into lines
+        //2. enumerate with index
+        //3. filter lines which have query
+        //4. get og content using index
+        //5. return collection
+        contents_small
+            .lines()
+            .enumerate()
+            .filter(|tup: &(usize, &str)| tup.1.contains(&query_small))
+            .map(|tup: (usize, &str)| contents[tup.0])
+            .collect()
+
     }
 
     pub fn search_case_sensitive<'a>(&self, contents: &'a String) -> Vec<&'a str> {
@@ -122,6 +160,14 @@ Case Sensitive Search : cargo run -- query file_path -s
         }
 
         search_result
+    }
+
+    //This one is compact & idiomatic
+    pub fn search_case_sensitive_using_iterator<'a>(&self, contents: &'a String) -> Vec<&'a str> {
+        contents
+        .lines()
+        .filter(|line| line.contains(&self.query))
+        .collect()
     }
 
     pub fn get_file_path(&self) -> &String {
@@ -181,6 +227,9 @@ Trust me."
             sensitivity: CaseSensitivity::Sensitive,
         };
 
-        assert_eq!(Vec::<&str>::new(), config.search_case_sensitive(config.get_file_path()));
+        assert_eq!(
+            Vec::<&str>::new(),
+            config.search_case_sensitive(config.get_file_path())
+        );
     }
 }

@@ -7,9 +7,14 @@ use std::{env, process};
 // Don't expect me to go strictly according to the book, as I am not XD.
 
 fn main() {
-    let input_args: Vec<String> = env::args().collect();
+    // let input_args: Vec<String> = env::args().collect();
 
-    let config: Config = Config::build_v2(&input_args).unwrap_or_else(|err| {
+    // let config: Config = Config::build_v2(&input_args).unwrap_or_else(|err| {
+    //     eprintln!("{err}");
+    //     process::exit(1);
+    // });
+
+    let config: Config = Config::build_v1(env::args()).unwrap_or_else(|err| {
         eprintln!("{err}");
         process::exit(1);
     });
