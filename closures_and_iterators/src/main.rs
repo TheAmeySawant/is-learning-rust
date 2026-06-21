@@ -71,7 +71,7 @@ fn main() {
     //That's how a clouser of concrete type is created.
     let example_closure = |x| x;
 
-    let s = example_closure(String::from("hello"));
+    let _s = example_closure(String::from("hello"));
 
     let mut list = vec![1, 2, 3];
     println!("Before defining closure: {list:?}");

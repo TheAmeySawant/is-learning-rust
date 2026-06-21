@@ -1,6 +1,6 @@
-use automated_tests::*;
+// use automated_tests::*;
 
-fn prints_and_returns_10 (a: i64) -> i64 {
+fn _prints_and_returns_10 (a: i64) -> i64 {
     //std output are printed only if the test fails.
     //Run cargo 'test -- --show-output' to get std output printed of successful test also. 
     println!("I got the Value : {a}"); 
@@ -22,13 +22,13 @@ mod tests {
     //for 'test' both fn containing (not just starting) test word in their fn name are runned.
     #[test]
     fn this_test_passes() {
-        assert_eq!(prints_and_returns_10(5), 10);
+        assert_eq!(_prints_and_returns_10(5), 10);
     }
 
     //cargo test -- --ignored runs only ignored tests (functions).
     #[ignore = "for a reason"]
     #[test]
     fn this_test_fails() {
-        assert_eq!(prints_and_returns_10(8), 8);
+        assert_eq!(_prints_and_returns_10(8), 8);
     }
 }
