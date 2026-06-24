@@ -39,11 +39,13 @@ enum Message {
     ChangeColor(Color),
 }
 
-    enum Message {
-        Hello { id: i32 },
+enum MessageId {
+    Hello{
+        id: i32
     }
+}
 
-struct Point {
+struct Point3D {
     x: i32,
     y: i32,
     z: i32,
@@ -131,22 +133,22 @@ fn main() {
         }
     }
 
-    let origin = Point { x: 0, y: 0, z: 0 };
+    let origin = Point3D { x: 0, y: 0, z: 0 };
 
     match origin {
-        Point { x, .. } => println!("x is {x}"),
+        Point3D { x, .. } => println!("x is {x}"),
     }
 
     
-    let msg = Message::Hello { id: 5 };
+    let msg = MessageId::Hello { id: 5 };
 
     match msg {
-        Message::Hello { id: id @ 3..=7 } => {
+        MessageId::Hello { id: id @ 3..=7 } => {
             println!("Found an id in range: {id}")
         }
-        Message::Hello { id: 10..=12 } => {
+        MessageId::Hello { id: 10..=12 } => {
             println!("Found an id in another range")
         }
-        Message::Hello { id } => println!("Found some other id: {id}"),
+        MessageId::Hello { id } => println!("Found some other id: {id}"),
     }
 }
